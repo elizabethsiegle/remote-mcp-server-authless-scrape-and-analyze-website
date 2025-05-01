@@ -25,7 +25,7 @@ export class MyMCP extends McpAgent {
 	private isInitializing = false;
 
 	async init() {
-		// If already initializing, wait for the current initialization to complete
+		// If already initializing, wait for current init to complete -> Prevents multiple simultaneous initializations
 		if (this.isInitializing) {
 			console.log('Browser initialization in progress, waiting...');
 			await this.initPromise;
@@ -51,7 +51,7 @@ export class MyMCP extends McpAgent {
 					this.browser = null;
 				}
 
-				// Properly initialize the browser binding
+				// Properly initialize the browser binding/handle browser binding errs
 				const browserBinding = (env as any).BROWSER;
 				if (!browserBinding) {
 					throw new Error('BROWSER binding not found in environment');
@@ -77,12 +77,12 @@ export class MyMCP extends McpAgent {
 	}
 
 	async cleanup() {
-		if (this.browser) {
+		if (this.browser) { // cleanup if browser exists
 			try {
 				console.log('Cleaning up browser instance');
 				await this.browser.close();
-				this.browser = null;
-				this.lastBrowserInit = 0;
+				this.browser = null; // clear the browser instance
+				this.lastBrowserInit = 0; // reset the last browser init time
 			} catch (error) {
 				console.error('Error during browser cleanup:', error);
 			}
@@ -127,7 +127,7 @@ export class MyMCP extends McpAgent {
 					console.log('Creating new page for URL:', url);
 					const page = await this.browser.newPage();
 					
-					// Set basic headers
+					// Set basic browser headers
 					await page.setExtraHTTPHeaders({
 						'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36'
 					});
@@ -244,11 +244,27 @@ export class MyMCP extends McpAgent {
 		this.server.tool(
 			"ask_q_about_website",
 			{
-				url: z.string().url(),
-				question: z.string().min(1)
+				input: z.string().min(1)
 			},
-			async ({ url, question }: { url: string; question: string }) => {
+			async (params: { input: string }) => {
 				try {
+					// Parse the input to get URL and question
+					const parts: string[] = params.input.split(',').map((s: string) => s.trim());
+					const url: string = parts[0];
+					const question: string = parts[1];
+					
+					if (!url || !question) {
+						return {
+							content: [{
+								type: "text",
+								text: "Please provide input in the format: website,question"
+							}],
+						};
+					}
+
+					// Ensure URL has protocol
+					const urlWithProtocol = url.startsWith('http') ? url : `https://${url}`;
+
 					// Ensure browser is initialized
 					await this.init();
 
@@ -265,13 +281,34 @@ export class MyMCP extends McpAgent {
 						};
 					}
 
-					console.log('Creating new page for URL:', url);
+					console.log('Creating new page for URL:', urlWithProtocol);
 					const page = await this.browser.newPage();
 					
-					// Set basic headers
+					// Set more realistic browser headers
 					await page.setExtraHTTPHeaders({
-						'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36'
+						'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
+						'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+						'Accept-Language': 'en-US,en;q=0.9',
+						'Accept-Encoding': 'gzip, deflate, br',
+						'Connection': 'keep-alive',
+						'Upgrade-Insecure-Requests': '1',
+						'Sec-Fetch-Dest': 'document',
+						'Sec-Fetch-Mode': 'navigate',
+						'Sec-Fetch-Site': 'none',
+						'Sec-Fetch-User': '?1',
+						'Cache-Control': 'max-age=0'
 					});
+
+					// Set viewport to look more like a real browser
+					await page.setViewport({
+						width: 1280,
+						height: 800,
+						deviceScaleFactor: 1
+					});
+
+					// Enable JavaScript and set other browser features
+					await page.setJavaScriptEnabled(true);
+					await page.setBypassCSP(true);
 
 					// Handle page errors
 					page.on('error', err => {
@@ -286,10 +323,11 @@ export class MyMCP extends McpAgent {
 
 					while (retryCount < maxRetries) {
 						try {
-							console.log(`Attempt ${retryCount + 1} to navigate to ${url}`);
-							response = await page.goto(url, {
-								waitUntil: 'load',
-								timeout: 30000 // 30 seconds timeout
+							console.log(`Attempt ${retryCount + 1} to navigate to ${urlWithProtocol}`);
+							response = await page.goto(urlWithProtocol, {
+								waitUntil: 'networkidle0',
+								timeout: 30000, // 30 seconds timeout
+								referer: 'https://www.google.com/'
 							});
 							
 							// Check response status
@@ -350,18 +388,14 @@ export class MyMCP extends McpAgent {
 					}
 
 					// Use Cloudflare AI to answer the question
-					const messages = [
-						{ 
-							role: "system", 
-							content: "You are a helpful assistant that answers questions about website content. Use the provided website content to answer the user's question. If the information isn't available in the content, say so." 
-						},
-						{
-							role: "user",
-							content: `Website Title: ${pageContent.title}\nDescription: ${pageContent.description || 'No description'}\nContent: ${pageContent.content?.slice(0, 2000) || 'No content available'}\n\nQuestion: ${question}`
-						}
-					];
+					const input = {
+						prompt: `Based on the following website content, please answer this question: ${question}
+						Website Title: ${pageContent.title}
+						Description: ${pageContent.description || 'No description'}
+						Content: ${pageContent.content?.slice(0, 2000) || 'No content available'}`
+					};
 
-					const analysis = await (env as any).AI.run("@cf/meta/llama-4-scout-17b-16e-instruct", { messages });
+					const analysis = await (env as any).AI.run("@cf/mistral/mistral-7b-instruct-v0.1", input);
 
 					return {
 						content: [{
