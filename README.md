@@ -1,7 +1,8 @@
 # Building a Remote MCP Server on Cloudflare (Without Auth)
 
 This example allows you to deploy a remote MCP server that doesn't require authentication on Cloudflare Workers. The server includes tools for website analysis and content extraction using Cloudflare's Browser Rendering and AI capabilities.
-![example image](https://private-user-images.githubusercontent.com/8932430/439511680-43c5ece5-f984-4d7b-8963-21a3e95cb441.png?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NDYwNzcwNjAsIm5iZiI6MTc0NjA3Njc2MCwicGF0aCI6Ii84OTMyNDMwLzQzOTUxMTY4MC00M2M1ZWNlNS1mOTg0LTRkN2ItODk2My0yMWEzZTk1Y2I0NDEucG5nP1gtQW16LUFsZ29yaXRobT1BV1M0LUhNQUMtU0hBMjU2JlgtQW16LUNyZWRlbnRpYWw9QUtJQVZDT0RZTFNBNTNQUUs0WkElMkYyMDI1MDUwMSUyRnVzLWVhc3QtMSUyRnMzJTJGYXdzNF9yZXF1ZXN0JlgtQW16LURhdGU9MjAyNTA1MDFUMDUxOTIwWiZYLUFtei1FeHBpcmVzPTMwMCZYLUFtei1TaWduYXR1cmU9ZjUwZWM1Y2NlNWU4YmI1MjhiNGZmNmIyZDM4YmNhNzg2ZGU5NGUxZTExZTM2OWE1YjJkOWFmNDgzOTM3MDE5OSZYLUFtei1TaWduZWRIZWFkZXJzPWhvc3QifQ.2NwUDniuCBy9TyBwEii2Kkm28P44dTXc2imvg0_NUwc)
+![example image](https://github.com/user-attachments/assets/1f26c632-7f04-40fe-a9d8-cc83030ac7cd)
+
 
 ## Get started: 
 
