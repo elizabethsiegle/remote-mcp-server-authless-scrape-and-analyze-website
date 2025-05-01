@@ -1,6 +1,6 @@
 # Building a Remote MCP Server on Cloudflare (Without Auth)
 
-This example allows you to deploy a remote MCP server that doesn't require authentication on Cloudflare Workers. 
+This example allows you to deploy a remote MCP server that doesn't require authentication on Cloudflare Workers. The server includes tools for website analysis and content extraction using Cloudflare's Browser Rendering and AI capabilities.
 
 ## Get started: 
 
@@ -12,6 +12,24 @@ Alternatively, you can use the command line below to get the remote MCP Server c
 ```bash
 npm create cloudflare@latest -- my-mcp-server --template=cloudflare/ai/demos/remote-mcp-authless
 ```
+
+## Available Tools
+
+### Website Analysis Tools
+
+1. **analyze_website**
+   - Scrapes and analyzes a website using Cloudflare's browser rendering
+   - Uses Cloudflare AI to provide a summary of the website's content
+   - Input: `url` (string) - The website URL to analyze
+   - Example: `[tool] analyze_website(url: "https://example.com")`
+
+2. **ask_q_about_website**
+   - Scrapes a website and answers specific questions about its content
+   - Uses Cloudflare AI to understand and respond to questions about the website
+   - Inputs:
+     - `url` (string) - The website URL to analyze
+     - `question` (string) - Your question about the website content
+   - Example: `[tool] ask_q_about_website(url: "https://example.com", question: "What services does this company offer?")`
 
 ## Customizing your MCP Server
 
@@ -48,3 +66,22 @@ Update with this configuration:
 ```
 
 Restart Claude and you should see the tools become available. 
+
+## Requirements
+
+To use the website analysis tools, you need:
+1. Cloudflare Workers with browser binding enabled
+2. Cloudflare AI binding configured
+3. Appropriate permissions for both bindings
+
+Make sure your `wrangler.jsonc` includes:
+```json
+{
+  "browser": {
+    "binding": "BROWSER"
+  },
+  "ai": {
+    "binding": "AI"
+  }
+}
+```
