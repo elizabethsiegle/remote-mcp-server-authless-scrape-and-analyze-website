@@ -24,5 +24,11 @@
 	},
 	"observability": {
 		"enabled": true
+	},
+	"browser": {
+		"binding": "BROWSER"
+	},
+	"ai": {
+		"binding": "AI"
 	}
 }
